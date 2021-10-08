@@ -1,5 +1,5 @@
 // qm stands for quoridor model
-
+//model is not finished yet
 
 public class qm {
     int[][] wedge   = new int [qd.ng][qd.ng]; // all possible weights of vertexes
