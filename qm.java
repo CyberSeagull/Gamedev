@@ -1,6 +1,7 @@
 // qm stands for quoridor model
 //model is not finished yet
-
+import java.awt.Point;
+	
 public class qm {
     int[][] wedge   = new int [qd.ng][qd.ng]; // all possible weights of vertexes
 
@@ -55,7 +56,7 @@ public class qm {
 	    }
 	}
 
-	public void initialplayers(player p1, player p2) { // initializing players for each new game
+	public void initialplayers(player p1, player p2) {
 		p1.initplayer(true);
 		p2.initplayer(false);
 	}
@@ -132,14 +133,248 @@ public class qm {
 		  	          wedge[ip][i-qd.nmatr]=1;		  		
 	      }
 	}
-	public boolean moveallowed (player pl, qd qdate) {// check if the player can reach the other side
-		Dijkstra( pl.counter, qdate.le);
+	
+		// square's or fence's number if there's a mouse situated 0 - in the square, 1 - on the right, 2 - up, -1 - not in the playing field
+	public static Point getncells(int x, int y) { // mouse position  =cellwh, ph
+		Point nc = new Point();
+		nc.y=-1;
+		int gamep=(qd.ph+qd.cellwh)*qd.nmatr;
+		y = gamep+qd.ph-y; // getting bigger from down to up
+        if ( (x<qd.ph) || (y<qd.ph) || (x>gamep+qd.ph-1) || (y>gamep+qd.ph-1) )
+    		return nc;
+        int xc= (x-qd.ph) / (qd.ph+qd.cellwh);
+        int yc= (y-qd.ph) / (qd.ph+qd.cellwh);
+        nc.x=xc+yc*qd.nmatr;
+        
+        if ( ((x-qd.ph) % (qd.ph+qd.cellwh)<qd.cellwh) && ((y-qd.ph) % (qd.ph+qd.cellwh)<qd.cellwh)  )
+    		nc.y=0;
+        else { 
+        	if ( ((x-qd.ph) % (qd.ph+qd.cellwh)>=qd.cellwh) && ((y-qd.ph) % (qd.ph+qd.cellwh)<qd.cellwh)  )
+    		nc.y=1;
+        	else
+            	if ( ((x-qd.ph) % (qd.ph+qd.cellwh)<=qd.cellwh) && ((y-qd.ph) % (qd.ph+qd.cellwh)>=qd.cellwh)  )
+            		nc.y=2;
+           }
+		
+        return nc;
+	}
+
+	public static int xtopaint(int ncell) {
+		 return (ncell % qd.nmatr)*(qd.cellwh+qd.ph)+qd.ph;
+	}
+	public static int ytopaint(int ncell) {
+		 return (qd.nmatr-1-ncell / qd.nmatr)*(qd.cellwh+qd.ph)+qd.ph;
+	}
+	
+	public static pboard setpartitiontopaint(int x1, boolean horizontalfence) { // horizontal fence
+		pboard pb=new pboard();
+		if (horizontalfence)//(x1+1==x2)  // horizontal fence
+			{pb.x=xtopaint(x1);
+             pb.y=ytopaint(x1)-qd.ph;
+             pb.w=qd.ph+qd.cellwh*2;
+             pb.h=qd.ph; }
+		else 
+            {pb.x=xtopaint(x1)+qd.cellwh;
+             pb.y=ytopaint(x1)-qd.ph-qd.cellwh;
+             pb.h=qd.ph+qd.cellwh*2;
+             pb.w=qd.ph; }
+		pb.c1=qd.cpart;
+		return pb;
+	}
+
+	public static pboard setpawngo(int xn) { 
+		pboard pb=new pboard();
+	    pb.x=xtopaint(xn); pb.y=ytopaint(xn);
+	    pb.w=qd.cellwh; pb.h=qd.cellwh; pb.c1=qd.cpawngo;
+		return pb;
+	}
+	
+	public  boolean isrealgotopawnplayer(int xn, player p1, player p2) {// player1 is almost always the one who makes a move  p1== xpawn
+		int xp=p1.counter;		
+		boolean gotoreal=(xp==xn-1)||(xp==xn+1)||(xp==xn+qd.nmatr)||(xp==xn-qd.nmatr);
+		if (gotoreal)
+			gotoreal=isgotopawn(xn, xp, p1, p2);
+		if (gotoreal) {
+			p1.counter=xn;
+			p1.pmove=false;
+			p2.pmove=true;
+		}
+		return gotoreal;
+	}
+	public  boolean isrealgotopawn(int xn, player p1, player p2) {//xpawn jumping oveer the pawn
+		boolean gotoreal=false;
+		if (p1.pmove)
+			gotoreal= isrealgotopawnplayer(xn, p1, p2);
+		else
+			gotoreal= isrealgotopawnplayer(xn, p2, p1);
+		return gotoreal;
+	}
+
+	public static boolean isgotopawn(int xn, int xp, player p1, player p2) {
+		boolean gotop=true;
+	    for (int i=0;i<qd.npartition; i++) {
+	    	if (xn==xp+1) {// move on the right
+		    	  if (  (p1.partition[i][0]>=0) && (p1.partition[i][0]==p1.partition[i][1]-qd.nmatr) ) //vertically
+		    		  gotop=gotop && !( (xp==p1.partition[i][0]) ||  (xp==p1.partition[i][1]) ); 
+		    	  if (  (p2.partition[i][0]>=0) && (p2.partition[i][0]==p2.partition[i][1]-qd.nmatr) )
+		    		  gotop=gotop && !( (xp==p2.partition[i][0]) ||  (xp==p2.partition[i][1]) ); 
+	    	   }
+	    	if (xn==xp-1) {//move on the left
+		    	  if (  (p1.partition[i][0]>=0) && (p1.partition[i][0]==p1.partition[i][1]-qd.nmatr) )
+		    		  gotop=gotop && !( (xn==p1.partition[i][0]) ||  (xn==p1.partition[i][1]) ); 
+		    	  if (  (p2.partition[i][0]>=0) && (p2.partition[i][0]==p2.partition[i][1]-qd.nmatr) )
+		    		  gotop=gotop && !( (xn==p2.partition[i][0]) ||  (xn==p2.partition[i][1]) ); 
+	    	   }
+	    	if (xn==xp+qd.nmatr) {//up
+		    	  if (  (p1.partition[i][0]>=0) && (p1.partition[i][0]==p1.partition[i][1]-1) )
+		    		  gotop=gotop && !( (xp==p1.partition[i][0]) ||  (xp==p1.partition[i][1]) ); 
+		    	  if (  (p2.partition[i][0]>=0) && (p2.partition[i][0]==p2.partition[i][1]-1) )
+		    		  gotop=gotop && !( (xp==p2.partition[i][0]) ||  (xp==p2.partition[i][1]) ); 
+	    	   }
+	    	if (xn==xp-qd.nmatr) {//down
+		    	  if (  (p1.partition[i][0]>=0) && (p1.partition[i][0]==p1.partition[i][1]-1) )
+		    		  gotop=gotop && !( (xn==p1.partition[i][0]) ||  (xn==p1.partition[i][1]) ); 
+		    	  if (  (p2.partition[i][0]>=0) && (p2.partition[i][0]==p2.partition[i][1]-1) )
+		    		  gotop=gotop && !( (xn==p2.partition[i][0]) ||  (xn==p2.partition[i][1]) ); 
+	    	   }
+
+	    	
+	    	if (!gotop) break;
+	    	}
+		return gotop;
+	}
+
+	public  void setccoordtopaint(Point nc, pboard[] pb, player p1, player p2, boolean isclick) { // mouse position  =cellwh, ph
+		int i, n=0; // n- number of all the fences set + squareswhich need to be redrawn
+		
+		for (i=0; i<qd.ng; i++) 
+			pb[i].x=-10;
+		for (i=0; i<qd.npartition; i++) {
+		    if (p1.partition[i][0]>=0) {
+		    	//System.out.println(p1.partition[i][0]);
+		    	pb[n]=setpartitiontopaint(p1.partition[i][0], (p1.partition[i][0]+1==p1.partition[i][1]));
+		    	n=n+1;
+		    }
+		    if (p2.partition[i][0]>=0) {
+		    	pb[n]=setpartitiontopaint(p2.partition[i][0], (p2.partition[i][0]+1==p2.partition[i][1]));
+		    	n=n+1;
+		    }
+		}
+		
+	    switch (nc.y) {
+	    // setting mouse's position                  // "number= "+pp.x+" (0-square; 1-on the right; 2-up; -1 not on the field
+	    case 0: pb[n].x=xtopaint(nc.x); pb[n].y=ytopaint(nc.x);
+			    pb[n].w=qd.cellwh; pb[n].h=qd.cellwh; pb[n].c1=qd.ccell;
+		    	++n;
+		    	if ((nc.x==p1.counter) || (nc.x==p2.counter) ) {// colouring possible squares to move
+		    		int xpawn=nc.x;
+			    	int xn=nc.x-qd.nmatr;  //down
+		    		if ( (xn>=0) && isgotopawn(xn, xpawn, p1, p2) ) {
+		    			pb[n]=setpawngo(xn); ++n;
+		    		}
+			    	xn=nc.x+qd.nmatr;//up
+		    		if ( (xn<qd.ng)  && isgotopawn(xn, xpawn, p1, p2) ) {
+		    			pb[n]=setpawngo(xn); ++n;
+		    		}
+			    	xn=nc.x-1;//left
+		    		if ( (xn>=0)  && isgotopawn(xn, xpawn, p1, p2) ) {
+		    			pb[n]=setpawngo(xn); ++n;
+		    		}
+			    	xn=nc.x+1;//right
+		    		if ( (xn<qd.ng)  && isgotopawn(xn, xpawn, p1, p2) ) {
+		    			pb[n]=setpawngo(xn); ++n;
+		    		}
+
+		    	}
+		    	break;
+	    case 1: if (issetnewpartition(nc.x, false, p1, p2)) {  // 1 setting the fence on the right
+	    	    	  pb[n]=setpartitiontopaint(nc.x, false);
+	  		    	++n;}
+			    break;
+	    case 2: if (issetnewpartition(nc.x, true, p1, p2)) {
+			          pb[n]=setpartitiontopaint(nc.x, true); // 2-up
+		  		    	++n;}
+				break;
+        default:
+            break;
+       }		
+		// drawing pawns
+		pb[n].x=xtopaint(p1.counter)+10;
+		pb[n].y=ytopaint(p1.counter)+10;
+		pb[n].w=qd.cellwh-20;
+		pb[n].h=qd.cellwh-20;
+		pb[n].c1=qd.cpawn1;
+		++n;
+		pb[n].x=xtopaint(p2.counter)+10;
+		pb[n].y=ytopaint(p2.counter)+10;
+		pb[n].w=qd.cellwh-20;
+		pb[n].h=qd.cellwh-20;
+		pb[n].c1=qd.cpawn2;			
+	}
+	// if it's possible to put a fence
+	public boolean issetnewpartition(int x, boolean horizontalfence,  player p1, player p2) { //x - fence's square
+		boolean newset=(x/qd.nmatr<qd.nmatr-1) && (x%qd.nmatr<qd.nmatr-1);
+		
+		for (int i=0; i<qd.npartition; i++) {
+		    if ( (p1.partition[i][0]>=0) && newset )
+		    	newset=auditsetpartition(x, horizontalfence, p1.partition[i][0], p1.partition[i][1]);
+		    if ( (p2.partition[i][0]>=0) && newset )
+		    	newset=auditsetpartition(x, horizontalfence, p2.partition[i][0], p2.partition[i][1]);
+		}
+		return newset;
+	}
+
+	public boolean setnewpartitionplayer(Point nc, player p1, player p2, int[] le) {
+	    boolean setp=false;	    
+    	if(p1.cpartition>0)
+    		if (issetnewpartition(nc.x, nc.y==2, p1, p2)) {	    		
+	    		if (nc.y==2) p1.partition[qd.npartition-p1.cpartition][1]=nc.x+1;	    			
+	    		else         p1.partition[qd.npartition-p1.cpartition][1]=nc.x+qd.nmatr;	    			
+	    		p1.partition[qd.npartition-p1.cpartition][0]=nc.x;
+	    		
+	    		setp=moveallowed(p1, le);
+	    		if (setp) setp=moveallowed(p2, le);
+	    		if (setp) {
+	    			p1.pmove=false;
+	    			p2.pmove=true;
+	    			p1.cpartition--;
+	    		} else { 
+	    			p1.partition[qd.npartition-p1.cpartition][0]=-10;
+	    			p1.partition[qd.npartition-p1.cpartition][1]=-10;
+	    		}	    				    	 
+	    }
+		return setp;
+	}
+	
+	public boolean setnewpartition(Point nc, player p1, player p2, int[] le) {
+	    boolean setp=false;	    
+	    if ( p1.pmove) setp=setnewpartitionplayer(nc, p1, p2, le);
+	    else           setp=setnewpartitionplayer(nc, p2, p1, le);   
+		return setp;
+	}
+	
+	public boolean auditsetpartition(int x, boolean horizontalfence,  int x1, int x2) { //x1, x2 - where the fence is set
+		boolean newset = true;
+		if (horizontalfence)  { //setting horizontal fence
+			if (x1+1==x2) // horizontal fence
+				 newset=!(  (x==x1) || (x==x2)|| (x+1==x1) || (x+1==x2)  );
+			else newset=!(x==x1); // vertical fence
+	    } else
+			if (x1+1==x2) // horizontal fence
+				newset=!(x==x1); 
+			else newset=!(  (x==x1) || (x==x2)|| (x+qd.nmatr==x1) || (x+qd.nmatr==x2)  ); // vertical fence
+		return newset;
+	}
+	
+	
+	public boolean moveallowed (player pl, int[] le) {// check if the player can reach the other side
+		Dijkstra( pl.counter, le);
 		int endboard=0;
 		if (pl.directionup) {
 			endboard=qd.ng-qd.nmatr;		
 		}				
 		for (int i=0; i<qd.nmatr; i++) {
-			if (qdate.le[i+endboard]<qd.maxedge)
+			if (le[i+endboard]<qd.maxedge)
 				return true;
 		}
 			
