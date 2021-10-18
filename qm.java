@@ -1,5 +1,5 @@
 // qm stands for quoridor model
-//model is not finished yet
+
 import java.awt.Point;
 	
 public class qm {
@@ -191,9 +191,23 @@ public class qm {
 	
 	public  boolean isrealgotopawnplayer(int xn, player p1, player p2) {// player1 is almost always the one who makes a move  p1== xpawn
 		int xp=p1.counter;		
-		boolean gotoreal=(xp==xn-1)||(xp==xn+1)||(xp==xn+qd.nmatr)||(xp==xn-qd.nmatr);
+		boolean gotoreal=((xp==xn-1)||(xp==xn+1)||(xp==xn+qd.nmatr)||(xp==xn-qd.nmatr)) && (!(xn==p2.counter)); //!(xn==p2.counter) there's another pawn on the way
+        if (gotoreal && (xp==xn-1)) 
+        	gotoreal=(xn%qd.nmatr>0); //upper line on the right
+        if (gotoreal && (xp==xn+1)) 
+        	gotoreal=(xp%qd.nmatr>0); // upper line on the left
+		
 		if (gotoreal)
 			gotoreal=isgotopawn(xn, xp, p1, p2);
+
+		if (!gotoreal)   //jumping over the pawn up
+			if (p1.directionup && (p1.counter==p2.counter-qd.nmatr) && (xn==p1.counter+2*qd.nmatr)) 
+				gotoreal=isgotopawn(xn-qd.nmatr, xp, p1, p2) && isgotopawn(xn, xp+qd.nmatr, p1, p2);
+			
+		if (!gotoreal)   //jumping over the pawn down
+			if ( (!p1.directionup) && (p1.counter==p2.counter+qd.nmatr) && (xn==p1.counter-2*qd.nmatr) ) 
+				gotoreal=isgotopawn(xn+qd.nmatr, xp, p1, p2) && isgotopawn(xn, xp-qd.nmatr, p1, p2);//check if there are any fences
+					
 		if (gotoreal) {
 			p1.counter=xn;
 			p1.pmove=false;
@@ -201,7 +215,7 @@ public class qm {
 		}
 		return gotoreal;
 	}
-	public  boolean isrealgotopawn(int xn, player p1, player p2) {//xpawn jumping oveer the pawn
+	public  boolean isrealgotopawn(int xn, player p1, player p2) {//xpawn jumping over the pawn
 		boolean gotoreal=false;
 		if (p1.pmove)
 			gotoreal= isrealgotopawnplayer(xn, p1, p2);
@@ -277,11 +291,11 @@ public class qm {
 		    			pb[n]=setpawngo(xn); ++n;
 		    		}
 			    	xn=nc.x-1;//left
-		    		if ( (xn>=0)  && isgotopawn(xn, xpawn, p1, p2) ) {
+		    		if ( (xn>=0)  && isgotopawn(xn, xpawn, p1, p2) && (xpawn%qd.nmatr>0) ) {
 		    			pb[n]=setpawngo(xn); ++n;
 		    		}
 			    	xn=nc.x+1;//right
-		    		if ( (xn<qd.ng)  && isgotopawn(xn, xpawn, p1, p2) ) {
+		    		if ( (xn<qd.ng)  && isgotopawn(xn, xpawn, p1, p2)  && (xn%qd.nmatr>0) ) {
 		    			pb[n]=setpawngo(xn); ++n;
 		    		}
 
@@ -366,6 +380,33 @@ public class qm {
 		return newset;
 	}
 	
+	//PC is making a move
+	public static int rnd(int max) // return diapason [0;max]
+	{	return (int) (Math.random() * ++max);
+	}
+	public boolean setnewmovecomp(Point bsize, player p1, player p2, int[] le) {
+		boolean newmove=false;
+		Point nc= new Point(-1,-1);
+		
+		for (int end=0; end<qd.maxedge; end++) {
+			if  (rnd(100) > 7)  {
+				for (int k=0; k<5 ; k++) {
+    			nc = getncells(rnd(bsize.x), rnd(bsize.y) );
+			    if (nc.y==0) break;
+			   }}
+			else {
+				nc.x=p2.counter-qd.nmatr;
+				if (nc.x>=0) nc.y=0;
+				else nc.y=-1;
+			}
+	        if ((nc.y==1)||(nc.y==2)) //setting a fence
+	        	newmove=setnewpartition(nc, p1, p2, le);	        
+	        if (nc.y==0) //moving a pawn
+	        	newmove=isrealgotopawn(nc.x, p1, p2); 			
+			if (newmove) break; 
+		}
+		return newmove;
+	}
 	
 	public boolean moveallowed (player pl, int[] le) {// check if the player can reach the other side
 		Dijkstra( pl.counter, le);
@@ -386,8 +427,13 @@ class player {
 	int[][] partition = new int [qd.npartition][2];
 	boolean directionup; // pawns direction
 	int counter; // pawn
+	int cpartition;
+	boolean pmove;
+	boolean comp;  //playing with a pc 
 	public player (boolean directionup) {
 		this.directionup = directionup;
+		initplayer(directionup);
+		comp=false;
 	}
 	public void initplayer(boolean dup) {
 		for (int i=0; i<qd.npartition; i++)
