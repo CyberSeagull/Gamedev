@@ -49,9 +49,15 @@ lp2w=new JLabel(" 10");
 lp2w.setBounds(phw-phw/4+105, 10, 110,30);  
 add(lp2w); 
 lpmove=new JLabel(" First player makes a move");
-lpmove.setBounds(phw/2,35,170,25); 
+lpmove.setBounds(phw/2,33,170,25); 
 add(lpmove);
 
+result=new JLabel("  ");  
+lresult.setBounds(phw/2,50,170,25);         
+lresult.setForeground(Color.BLUE);
+add(lresult);                              
+
+Point bsize = new Point(board.getSize().height,board.getSize().width);
 
 JLabel l1,l2,l3;
 l1=new JLabel("l1 Label.");  
@@ -85,18 +91,17 @@ add(rb1);add(rb2);add(b);
 	b.addActionListener(new ActionListener() { //button click
 	    @Override
 	    public void actionPerformed(ActionEvent e) {
-    	   p1.initplayer(true);
+    	       p1.initplayer(true);
 	       p2.initplayer(false);
-	       lp1w.setText(" "+p1.cpartition); 
-	       lp2w.setText(" "+p2.cpartition);
+	       p2.comp=rb1.isSelected();
    	       if(rb2.isSelected())  
    	         	lp2.setText("Player 2. Walls:");
    	       else lp2.setText("Computer . Walls:");
    	        	
-		       qdate.mousexy.x=0;
-		       qdate.mousexy.y=0;
-		       qmodel.setccoordtopaint( qdate.mousexy, board.pb, p1, p2, false);
-		       board.boardrepaint();
+		       qdate.mousexy.x=-1;
+		       qdate.mousexy.y=-1;
+		       lresult.setText("Game has begun");
+		       setdatetoframe(qdate.mousexy);
 	    }
 	});	
 	
@@ -125,7 +130,17 @@ add(rb1);add(rb2);add(b);
 	        if ((nc.y==1)||(nc.y==2)) //setting a fence
 	        	qmodel.setnewpartition(nc, p1, p2, qdate.le);
 	        if (nc.y==0) //making a move
-	        	qmodel.isrealgotopawn(nc.x, p1, p2);
+	        	if (qmodel.isrealgotopawn(nc.x, p1, p2)) { 
+	        		if (p1.counter>=(qd.ng-qd.nmatr) )         
+	        			lresult.setText("First player is the winner"); 
+	        		if (p2.counter<qd.nmatr)       
+	        			lresult.setText("Second player is the winner"); 
+	        	}
+	        if (p2.pmove && p2.comp && (p1.counter<=(qd.ng-qd.nmatr)) ) {	  
+	        	qmodel.setnewmovecomp(bsize, p1, p2, qdate.le);    
+        		if (p2.counter<qd.nmatr)         
+        			lresult.setText("Second player is the winner		"); 
+	        }
 	        setdatetoframe(nc);
 	    }
 	    public void mouseExited   (MouseEvent e){
@@ -148,7 +163,7 @@ void setdatetoframe(Point pp) {
     lp2w.setText(" "+p2.cpartition);
     if (p1.pmove)
          lpmove.setText("First player makes a move");
-    else lpmove.setText("Second player makes a move");
+    if (p2.pmove) lpmove.setText("Second player makes a move");
 
 };
 
