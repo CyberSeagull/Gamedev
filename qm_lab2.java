@@ -417,3 +417,182 @@ public class qm {
 		}
 		return false;
 	}
+	//	<<<<<<<<<<<<<<<<<<<<<< the opponent makes a move
+	public boolean setmoveenemy(String sg, player p1, player p2, int[] le) {
+		boolean newmove=false;
+        String scoord=sg.substring(sg.indexOf(qd.stremty)+1);
+        String scom=sg.substring(0,sg.indexOf(qd.stremty));
+        String strpawn="abcdefghi";
+        String stredge="stuvwxyz";
+        String strdigit="123456789";
+        
+		if (!(scom.length()==4) || (scoord.length()<2)) return newmove; 
+		Point nc= new Point(0,-1); // moving a pawn or setting a fence
+		
+		if ( (scom.contains(qd.strwall)) && (scoord.length()==3)) // checking a fence
+			if (scoord.indexOf('h')==2 )  nc.y=1;
+            else 
+            	if (scoord.charAt(2)=='v')  nc.y=2;
+		if (scom.contains(qd.strjump) || scom.contains(qd.strmove))
+			nc.y=0;
+		if (nc.y<0) return newmove;
+		int j= (nc.y==0) ? strpawn.indexOf(scoord.charAt(0)) : stredge.indexOf(scoord.charAt(0)); 
+		int i= strdigit.indexOf(scoord.charAt(1)); 
+        if ((i<0) || (j<0)) return newmove; 
+        
+        nc.x=qd.nmatr*(qd.nmatr-i-1)+j;        
+		if (nc.y>0) nc.x=nc.x-qd.nmatr; //edge
+		
+		//System.out.println(scom.length()+"  "+scom+"="+scoord+"  "+scoord.length()+" nc.x="+nc.x+" nc.y="+nc.y);
+        if (  !(p1.pmove && p1.comp || p2.pmove && p2.comp) )  // it's not an ai who makes a move
+        	newmove = (nc.y==0) ? setnewpartition(nc, p1, p2, le) : isrealgotopawn(nc.x, p1, p2);
+	   return newmove;  
+	}
+	
+	public static int rnd(int max) // return range [0;max]
+	{	return (int) (Math.random() * ++max);
+	}
+
+	//<<<<<<<<<<<< ai's making a move <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	public boolean setnewmovecomp(player p1, player p2, int[] le) {
+		//System.out.println("--------------------------------------------------------------------------------"+ " p1c="+p1.counter+" p2c="+p2.counter+" p1move="+p1.pmove);		
+		return  newmoveminimax(p1, p2, le, 0)<qd.maxedge; 			
+	}
+    public boolean  moveplayer(Point nc, player p1, player p2, int[] le) // player's making a move
+    {
+    	return (nc.y==0) ? isrealgotopawn(nc.x, p1, p2) : setnewpartition(nc, p1, p2, le);
+    }
+
+//	<<<<<<<<<<<<<<<<<<<<<< opponent's move
+	public String setstringmove(Point nc, int pc) {
+		String strmove="";
+        String strpawn="ABCDEFGHI";
+        String stredge="STUVWXYZ";
+        String strdigit="123456789";
+		if (nc.y>0) nc.x=nc.x+qd.nmatr; //edge
+		int j= nc.x % qd.nmatr; 
+		int i= qd.nmatr-(nc.x/qd.nmatr+1);
+		if (nc.y==0)
+          strmove=((nc.x==pc+1) || (nc.x==pc-1) || (nc.x==pc+qd.nmatr) || (nc.x==pc+qd.nmatr)) ? qd.strmove : qd.strjump;
+		else strmove=qd.strwall;
+		strmove=strmove+qd.stremty;
+	   return strmove;  
+	}
+
+	public void copyplayer(player source, player dest) {
+		dest.counter    =source.counter;
+		dest.cpartition =source.cpartition;
+		dest.pmove      =source.pmove;
+		dest.directionup=source.directionup;
+		dest.countpawn  =source.countpawn;
+		dest.comp       =source.comp;
+		for (int i = 0; i < source.partition.length; i++) 
+	        System.arraycopy(source.partition[i], 0, dest.partition[i], 0, source.partition[i].length);		
+	}
+
+	//p1 is the one who makes the first move
+	public int newmoveminimax(player p1, player p2, int[] le, int recursiveLevel) { //rl-recursiveLevel
+		Point pway= new Point(-1,0);
+		int testm=qd.maxedge;
+		int minmax = p1.pmove ? qd.minval : qd.maxval;
+		//System.out.println("             �ղ� ### recursiveLevel="+recursiveLevel+" p1.pmove="+p1.pmove+" p1.up="+p1.directionup+" p1.counter="+p1.counter+" p2.counter="+p2.counter+" minmax="+minmax+" p1.comp="+p1.comp+" #### countpawn="+p1.countpawn);
+		if (recursiveLevel >= qd.minmaxlevel *4) {
+			int mm2= p2.pmove ? minway(p1, p2, le) : minway(p2, p1, le); // the lowest level for the opponent
+			//System.out.println("MAX LEVEL     "+p1.pmove+" recursiveLevel= "+recursiveLevel+"===================== "+" minway="+mm2);
+			return mm2; //p2.pmove ? minway(p1, p2, le) : minway(p2, p2, le); // the lowest level
+		}
+		player dp1 = new player(p1.directionup);
+		player dp2 = new player(p2.directionup);
+		Point nc= new Point(0,-1); // moving pawn or setting fence
+		int playerup=-1; // moving up
+	    for (int i = 0; i < 12; i++) {
+		//for (int i = 0; i < 4; i++) {
+         //   if (p1.pmove) {  
+	    	copyplayer(p1, dp1); copyplayer(p2, dp2);
+	    //	} else {copyplayer(p2, dp1); copyplayer(p1, dp2); }            
+			int pcounter=p1.pmove ? p1.counter: p2.counter;
+			if (p1.pmove) playerup=p1.directionup ? 1 : -1;
+			else playerup=p2.directionup ? 1 : -1;
+			
+			switch (i) {    	
+	    	case 0: nc.x=pcounter+  playerup*qd.nmatr; break; // up
+	    	case 1: nc.x=pcounter+2*playerup*qd.nmatr; break; // up jump
+	    	case 2: nc.x=pcounter-1; break; // left
+	    	case 3: nc.x=pcounter+1; break; // right
+	    	case 4: nc.x=pcounter-2; break; // left jump
+	    	case 5: nc.x=pcounter+2; break; // right jump
+	    	case 6: nc.x=pcounter-  playerup*qd.nmatr; break; // down
+	    	case 7: nc.x=pcounter-2*playerup*qd.nmatr; break; // down jump
+			} 	    	
+	    	nc.y=0; //moving a pawn
+	    	if (i>7) { // checking fences  0 - pawn 1- on the right 2- up -1 - not in the playing field
+	    		pcounter=p1.pmove ? p2.counter: p1.counter;
+	    	if ( (p1.countpawn>2) && ( (p1.pmove ? p1.cpartition: p2.cpartition) >0) ) {
+	    		nc.x=p1.directionup ?  pcounter-i/10-qd.nmatr : pcounter-i/10;//-  playerup*qd.nmatr;
+	    		nc.x=pcounter-i/10;//-  playerup*qd.nmatr;
+	    	    nc.y=1+i % 2; // 1- on the right or 2- up
+	    	}else continue;
+	    	} 
+	    	if (moveplayer(nc, dp1, dp2, le)) {
+            //    System.out.println("%% "+i+"= "+recursiveLevel+"  nc.x= "+nc.x+"  pc= "+pcounter+" p1c="+dp1.counter+" p2c="+dp2.counter+"  minmax= "+minmax+" p1move="+dp1.pmove);
+		    	testm=	newmoveminimax(dp1, dp2, le, recursiveLevel+1);
+                if ((testm >= minmax && p1.pmove) ||  (testm <=minmax && p2.pmove)) // if the conditions are equal
+	               {  if ((testm==minmax) && ( (pway.x>=0) && (pway.x<qd.ng) && (pway.y==0) ) ) {
+	            	  int minnew = p1.pmove ? minway(p1, p2, le) : minway(p2, p1, le);
+	            	  int pawn = p1.counter;
+	            	  p1.counter=pway.x;
+	            	  int minold =  p1.pmove ? minway(p1, p2, le)+1 : minway(p2, p1, le)+1;
+	            	  p1.counter=pawn;
+	            	  if (minnew<minold) {minmax = testm; pway.x=nc.x;pway.y=nc.y;} } 
+                	  else  {
+	                   minmax = testm;  
+	                   pway.x=nc.x;
+	                   pway.y=nc.y;
+                	}
+	              //     System.out.println(" ?????   "+i+" recursiveLevel= "+recursiveLevel+"  nc.x= "+nc.x+"  pcounter= "+pcounter+"  pway.x= "+pway.x+"  minmax= "+minmax);
+	               }			
+			}
+	    }
+	    
+	    if (pway.x < 0 || pway.x > 80)  {//NOT_INITIALIZED
+      	  //System.out.println("NOT_INITIALIZED  pway.x="+pway.x+" p1c="+p1.counter+" p2c="+p2.counter+" p1move="+p1.pmove);
+	        return p2.pmove ? minway(p1, p2, le) : minway(p2, p1, le);
+	    }
+		//making a move after choosing the best one
+	    if (recursiveLevel == 0)
+	    {   String strmovecomp=setstringmove(pway, p1.pmove ? p1.counter: p2.counter);
+            System.out.println(strmovecomp);
+	    	moveplayer(pway, p1, p2, le);	    	
+	    }	
+	    return minmax;
+	}
+	
+}
+class player {
+	int[][] partition = new int [qd.npartition][2];
+	boolean directionup; // pawns direction
+	int counter; // pawn
+	int countpawn=0;
+	int cpartition;
+	boolean pmove;
+	boolean comp;
+	public player (boolean directionup) {		
+		this.directionup = directionup;
+		initplayer(directionup);
+		comp=false;
+	}
+	public void initplayer(boolean dup) {			
+	    for (int i=0; i<qd.npartition; i++)
+	    { this.partition[i][0]=-10;        // number of the square (from 0 to 80)
+	      this.partition[i][1]=-10;
+	      this.countpawn=0;
+	    }
+	    cpartition=qd.npartition;
+	    pmove=dup;
+	    this.directionup=dup;
+		if (dup)
+     	   counter=qd.GetNCell(1, qd.nmatr/2 +1); // setting initial pawns location
+		else	
+	       counter=qd.GetNCell(qd.nmatr, qd.nmatr/2 +1);
+	}
+}
