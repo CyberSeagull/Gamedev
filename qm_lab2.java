@@ -445,7 +445,7 @@ public class qm {
 		
 		//System.out.println(scom.length()+"  "+scom+"="+scoord+"  "+scoord.length()+" nc.x="+nc.x+" nc.y="+nc.y);
         if (  !(p1.pmove && p1.comp || p2.pmove && p2.comp) )  // it's not an ai who makes a move
-        	newmove = (nc.y==0) ? setnewpartition(nc, p1, p2, le) : isrealgotopawn(nc.x, p1, p2);
+        	newmove = (nc.y>0) ? setnewpartition(nc, p1, p2, le) : isrealgotopawn(nc.x, p1, p2);
 	   return newmove;  
 	}
 	
@@ -463,7 +463,6 @@ public class qm {
     	return (nc.y==0) ? isrealgotopawn(nc.x, p1, p2) : setnewpartition(nc, p1, p2, le);
     }
 
-//	<<<<<<<<<<<<<<<<<<<<<< opponent's move
 	public String setstringmove(Point nc, int pc) {
 		String strmove="";
         String strpawn="ABCDEFGHI";
@@ -472,10 +471,18 @@ public class qm {
 		if (nc.y>0) nc.x=nc.x+qd.nmatr; //edge
 		int j= nc.x % qd.nmatr; 
 		int i= qd.nmatr-(nc.x/qd.nmatr+1);
+	//	System.out.println(" i= "+i+" j=  "+j+" nc.x="+nc.x+" nc.y="+nc.y);
 		if (nc.y==0)
           strmove=((nc.x==pc+1) || (nc.x==pc-1) || (nc.x==pc+qd.nmatr) || (nc.x==pc+qd.nmatr)) ? qd.strmove : qd.strjump;
 		else strmove=qd.strwall;
 		strmove=strmove+qd.stremty;
+	//	System.out.println(" i= "+i+" j=  "+j+" nc.x="+nc.x+" nc.y="+nc.y+"   "+strmove);
+		if (nc.y==0) strmove=strmove+strpawn.substring(j,j+1)+strdigit.substring(i, i+1);
+		if (nc.y>0) {
+			 strmove=strmove+stredge.substring(j,j+1)+strdigit.substring(i, i+1);
+			 if (nc.y==2) strmove=strmove+'h';
+			 else         strmove=strmove+'V'; 
+		}
 	   return strmove;  
 	}
 
@@ -563,7 +570,7 @@ public class qm {
 	    {   String strmovecomp=setstringmove(pway, p1.pmove ? p1.counter: p2.counter);
             System.out.println(strmovecomp);
 	    	moveplayer(pway, p1, p2, le);	    	
-	    }	
+	    }
 	    return minmax;
 	}
 	
