@@ -456,7 +456,7 @@ public class qm {
 	//<<<<<<<<<<<< ai's making a move <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	public boolean setnewmovecomp(player p1, player p2, int[] le) {
 		//System.out.println("--------------------------------------------------------------------------------"+ " p1c="+p1.counter+" p2c="+p2.counter+" p1move="+p1.pmove);		
-		return  newmoveminimax(p1, p2, le, 0)<qd.maxedge; 			
+		return  newmoveminimax(p1, p2, le, 0, -qd.maxedge, qd.maxedge)<qd.maxedge 			
 	}
     public boolean  moveplayer(Point nc, player p1, player p2, int[] le) // player's making a move
     {
@@ -468,12 +468,13 @@ public class qm {
         String strpawn="ABCDEFGHI";
         String stredge="STUVWXYZ";
         String strdigit="123456789";
-		if (nc.y>0) nc.x=nc.x+qd.nmatr; //edge
-		int j= nc.x % qd.nmatr; 
-		int i= qd.nmatr-(nc.x/qd.nmatr+1);
+		int ncx=nc.x;
+		if (nc.y>0) ncx=nc.x+qd.nmatr; //edge
+		int j= ncx % qd.nmatr; 
+		int i= qd.nmatr-(ncx/qd.nmatr+1);
 	//	System.out.println(" i= "+i+" j=  "+j+" nc.x="+nc.x+" nc.y="+nc.y);
 		if (nc.y==0)
-          strmove=((nc.x==pc+1) || (nc.x==pc-1) || (nc.x==pc+qd.nmatr) || (nc.x==pc+qd.nmatr)) ? qd.strmove : qd.strjump;
+			strmove=((ncx==pc+1) || (ncx==pc-1) || (ncx==pc+qd.nmatr) || (ncx==pc-qd.nmatr)) ? qd.strmove : qd.strjump;
 		else strmove=qd.strwall;
 		strmove=strmove+qd.stremty;
 	//	System.out.println(" i= "+i+" j=  "+j+" nc.x="+nc.x+" nc.y="+nc.y+"   "+strmove);
@@ -498,12 +499,13 @@ public class qm {
 	}
 
 	//p1 is the one who makes the first move
-	public int newmoveminimax(player p1, player p2, int[] le, int recursiveLevel) { //rl-recursiveLevel
+	public int newmoveminimax(player p1, player p2, int[] le, int recursiveLevel, int alpha, int beta) { 
 		Point pway= new Point(-1,0);
 		int testm=qd.maxedge;
 		int minmax = p1.pmove ? qd.minval : qd.maxval;
-		//System.out.println("             �ղ� ### recursiveLevel="+recursiveLevel+" p1.pmove="+p1.pmove+" p1.up="+p1.directionup+" p1.counter="+p1.counter+" p2.counter="+p2.counter+" minmax="+minmax+" p1.comp="+p1.comp+" #### countpawn="+p1.countpawn);
-		if (recursiveLevel >= qd.minmaxlevel *4) {
+		//System.out.println("             recursiveLevel="+recursiveLevel+" p1.pmove="+p1.pmove+" p1.up="+p1.directionup+" p1.counter="+p1.counter+" p2.counter="+p2.counter+" minmax="+minmax+" p1.comp="+p1.comp+" #### countpawn="+p1.countpawn);
+		boolean movecomp = (p1.comp && p1.pmove);
+		if (recursiveLevel >= qd.minmaxlevel *2) {
 			int mm2= p2.pmove ? minway(p1, p2, le) : minway(p2, p1, le); // the lowest level for the opponent
 			//System.out.println("MAX LEVEL     "+p1.pmove+" recursiveLevel= "+recursiveLevel+"===================== "+" minway="+mm2);
 			return mm2; //p2.pmove ? minway(p1, p2, le) : minway(p2, p2, le); // the lowest level
@@ -512,7 +514,7 @@ public class qm {
 		player dp2 = new player(p2.directionup);
 		Point nc= new Point(0,-1); // moving pawn or setting fence
 		int playerup=-1; // moving up
-	    for (int i = 0; i < 12; i++) {
+	    for (int i = 0; i < 11; i++) { 
 		//for (int i = 0; i < 4; i++) {
          //   if (p1.pmove) {  
 	    	copyplayer(p1, dp1); copyplayer(p2, dp2);
@@ -534,29 +536,34 @@ public class qm {
 	    	nc.y=0; //moving a pawn
 	    	if (i>7) { // checking fences  0 - pawn 1- on the right 2- up -1 - not in the playing field
 	    		pcounter=p1.pmove ? p2.counter: p1.counter;
-	    	if ( (p1.countpawn>2) && ( (p1.pmove ? p1.cpartition: p2.cpartition) >0) ) {
-	    		nc.x=p1.directionup ?  pcounter-i/10-qd.nmatr : pcounter-i/10;//-  playerup*qd.nmatr;
-	    		nc.x=pcounter-i/10;//-  playerup*qd.nmatr;
-	    	    nc.y=1+i % 2; // 1- on the right or 2- up
+	    	if ( (p1.countpawn>1) && ( (p1.pmove ? p1.cpartition: p2.cpartition) >0) ) {
+	    		// playerup  1 - moving down -1 - moving upwards           
+                if (rnd(7-p1.countpawn)>7) continue;     
+	    		nc.x=(playerup==-1) ? pcounter-i/10 : pcounter-i/10-qd.nmatr;//-  playerup*qd.nmatr;
+	    	    nc.y=2-i % 2; 
 	    	}else continue;
 	    	} 
 	    	if (moveplayer(nc, dp1, dp2, le)) {
-            //    System.out.println("%% "+i+"= "+recursiveLevel+"  nc.x= "+nc.x+"  pc= "+pcounter+" p1c="+dp1.counter+" p2c="+dp2.counter+"  minmax= "+minmax+" p1move="+dp1.pmove);
-		    	testm=	newmoveminimax(dp1, dp2, le, recursiveLevel+1);
-                if ((testm >= minmax && p1.pmove) ||  (testm <=minmax && p2.pmove)) // if the conditions are equal
-	               {  if ((testm==minmax) && ( (pway.x>=0) && (pway.x<qd.ng) && (pway.y==0) ) ) {
+		    	testm=	newmoveminimax(dp1, dp2, le, recursiveLevel+1, alpha, beta);
+                if ((testm >= minmax && p1.pmove) ||  (testm <=minmax && p2.pmove)) // choosing the best one if the conditions are equal
+	               {  if ((testm==minmax) && ( (pway.x>=0) && (pway.x<qd.ng) && (pway.y==0) ) && movecomp ) { 
 	            	  int minnew = p1.pmove ? minway(p1, p2, le) : minway(p2, p1, le);
 	            	  int pawn = p1.counter;
 	            	  p1.counter=pway.x;
 	            	  int minold =  p1.pmove ? minway(p1, p2, le)+1 : minway(p2, p1, le)+1;
 	            	  p1.counter=pawn;
+	            //       System.out.println("? = ?  "+i+" recursiveLevel= "+recursiveLevel+"  nc.x= "+nc.x+"  pcounter= "+pcounter+"  pway.x= "+pway.x+"  minmax= "+minmax);
 	            	  if (minnew<minold) {minmax = testm; pway.x=nc.x;pway.y=nc.y;} } 
                 	  else  {
 	                   minmax = testm;  
 	                   pway.x=nc.x;
 	                   pway.y=nc.y;
                 	}
-	              //     System.out.println(" ?????   "+i+" recursiveLevel= "+recursiveLevel+"  nc.x= "+nc.x+"  pcounter= "+pcounter+"  pway.x= "+pway.x+"  minmax= "+minmax);
+	               if (movecomp)
+	                alpha=Math.max(alpha, testm);
+	                else
+	                  beta=Math.min(beta, testm);
+	               if (beta < alpha) break; 
 	               }			
 			}
 	    }
