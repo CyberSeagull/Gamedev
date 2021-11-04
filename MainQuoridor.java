@@ -14,7 +14,7 @@ public class MainQuoridor {
 
 		do {
 			sg = in.nextLine();
-			sg.toLowerCase();
+			sg = sg.toLowerCase();
 			if (sg.indexOf(qd.stremty)>=0)
 				cmodel.setmoveenemy (sg, p1, p2, cdate.le);
 			if (sg.toUpperCase().contains(qd.strexit.toUpperCase()))
@@ -24,12 +24,14 @@ public class MainQuoridor {
 	     	   p1.initplayer(true);
 		       p2.initplayer(false);
 		       p2.comp=true;
+			p1.comp=false;
 		       } 
 	        if (sg.toUpperCase().contains(qd.strwhite.toUpperCase())) {// starting a new game
 	           cdate.startgame=1;
 	     	   p1.initplayer(true);
 		       p2.initplayer(false);
 		       p1.comp=true;
+			p2.comp=false;
 		       }
 	        
 	        if (p1.pmove && p1.comp) { // ai's making a move
