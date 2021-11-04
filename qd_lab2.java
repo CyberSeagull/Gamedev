@@ -16,7 +16,7 @@ public class qd {
     public static final int maxedge=100000; // setting vertex = infinity (here 100000)
     public static final int maxval=maxedge; // max value for the minimax
     public static final int minval=0; // min value for the minimax
-    public static final int minmaxlevel=1; // level for the minimax
+    public static final int minmaxlevel=3; // level for the minimax
 
     // consol input output  
     public static final String strwhite = "white"; 
