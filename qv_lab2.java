@@ -19,7 +19,7 @@ public class qv extends JFrame implements ActionListener{
 JRadioButton rb1,rb2;    
 JButton b;    
 JLabel lp1,lp2, lp1w, lp2w;
-JLabel lpmove, lresult; //2021
+JLabel lpmove, lresult; 
 
 qpanel board=new qpanel();  
 
@@ -68,14 +68,14 @@ l3.setBounds(20, 47, 200,30);
 
 rb1 = new JRadioButton("Play with computer");
 rb2 = new JRadioButton("Two players");
-rb1.setBounds(phw/4+15, 1,90,20);        
-rb2.setBounds(phw/4+15, 21,90,20);  
-rb1.setSelected(true);   //2021
+rb1.setBounds(phw/4+7, 1, 134,20);        
+rb2.setBounds(phw/4+7, 21,120,20);  
+rb1.setSelected(true);   
 ButtonGroup bg=new ButtonGroup();    
 bg.add(rb1);bg.add(rb2);    
 
 JCheckBox jbPC = new JCheckBox("First AI makes a move");
-jbPC.setBounds(phw/4+15, 41,120,20);
+jbPC.setBounds(phw/4-15, 41,150,20);
 add(jbPC);
 
 b=new JButton("Start a new game?");
