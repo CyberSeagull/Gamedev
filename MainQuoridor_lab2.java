@@ -13,6 +13,7 @@ public class MainQuoridor {
         String sg = "";
 
 		do {
+			try{
 			sg = in.nextLine();
 			sg = sg.toLowerCase();
 			if (sg.indexOf(qd.stremty)>=0)
@@ -46,8 +47,12 @@ public class MainQuoridor {
 	    	
 	    	if (p2.counter<qd.nmatr)  
 	    		cdate.startgame=3;
-
-	        				
+			}
+			catch (Exception e) {
+				System.out.println("Input problem "+e); 
+			}
+			System.gc();
+        				
 		    } while (cdate.startgame<=1); //// 0 - waiting for the game to start  1- game has begun 2-3 - game has ended
         
 		System.out.printf(" GAME OVER \n");
