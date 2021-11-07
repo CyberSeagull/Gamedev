@@ -216,6 +216,31 @@ public class qm {
 		if (!gotoreal)   //jumping over the pawn on the right
 			if ( (p1.counter==p2.counter-1) && (xn==p1.counter+2) && (xn/qd.nmatr==p1.counter/qd.nmatr) )
 				gotoreal=isgotopawn(xn-1, xp, p1, p2) && isgotopawn(xn, xp+1, p1, p2);
+		if (!gotoreal)   //jumping over the pawn diagonally up and right the opponent is up
+			if ( (p1.counter==p2.counter-qd.nmatr) && (xn==p1.counter+1+qd.nmatr) && ((xn-qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) ) // same line
+				gotoreal=isgotopawn(xn-1, xp, p1, p2) && isgotopawn(xn-1, xn, p1, p2);
+		if (!gotoreal)   //jumping over the pawn diagonally up and left the opponent is up
+			if ( (p1.counter==p2.counter-qd.nmatr) && (xn==p1.counter-1+qd.nmatr) && ((xn-qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) )
+				gotoreal=isgotopawn(xn+1, xp, p1, p2) && isgotopawn(xn, xn+1, p1, p2);
+		if (!gotoreal)   //jumping over the pawn diagonally down and right the opponent is down
+			if ( (p1.counter==p2.counter+qd.nmatr) && (xn==p1.counter+1-qd.nmatr) && ((xn+qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) ) // same line
+				gotoreal=isgotopawn(xn-1, xp, p1, p2) && isgotopawn(xn-1, xn, p1, p2);
+		if (!gotoreal)   //jumping over the pawn diagonally down and left the opponent is down
+			if ( (p1.counter==p2.counter+qd.nmatr) && (xn==p1.counter-1-qd.nmatr) && ((xn+qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) )
+				gotoreal=isgotopawn(xn+1, xp, p1, p2) && isgotopawn(xn, xn+1, p1, p2);
+		
+		if (!gotoreal)   //jumping over the pawn diagonally up and right the opponent is on the right
+			if ( (p1.counter==p2.counter-1) && (xn==p1.counter+1+qd.nmatr) && ((xn-qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) ) // same line
+				gotoreal=isgotopawn(xn-qd.nmatr, xp, p1, p2) && isgotopawn(xn-qd.nmatr, xn, p1, p2);
+		if (!gotoreal)   //jumping over the pawn diagonally down and right the opponent is on the right
+			if ( (p1.counter==p2.counter-1) && (xn==p1.counter+1-qd.nmatr) && ((xn+qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) )
+				gotoreal=isgotopawn(xn+qd.nmatr, xp, p1, p2) && isgotopawn(xn, xn+qd.nmatr, p1, p2);
+		if (!gotoreal)   //jumping over the pawn diagonally up and left the opponent is on the left
+			if ( (p1.counter==p2.counter+1) && (xn==p1.counter-1+qd.nmatr) && ((xn-qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) ) // same line
+				gotoreal=isgotopawn(xn-qd.nmatr, xp, p1, p2) && isgotopawn(xn-qd.nmatr, xn, p1, p2);
+		if (!gotoreal)   //jumping over the pawn diagonally down and left  the opponent is on the left
+			if ( (p1.counter==p2.counter+1) && (xn==p1.counter-1-qd.nmatr) && ((xn+qd.nmatr)/qd.nmatr==p1.counter/qd.nmatr) )
+				gotoreal=isgotopawn(xn+qd.nmatr, xp, p1, p2) && isgotopawn(xn, xn+qd.nmatr, p1, p2);
         gotoreal=gotoreal && (xn>=0) && (xn<qd.ng);
 
 		if (gotoreal) {
@@ -430,10 +455,10 @@ public class qm {
 		Point nc= new Point(0,-1); // moving a pawn or setting a fence
 		
 		if ( (scom.contains(qd.strwall)) && (scoord.length()==3)) // checking a fence
-			if (scoord.indexOf('h')==2 )  nc.y=1;
-            else 
-            	if (scoord.charAt(2)=='v')  nc.y=2;
-		if (scom.contains(qd.strjump) || scom.contains(qd.strmove))
+			if (scoord.indexOf('h')==2 )  nc.y=2;  // checking fences 0 - pawn 1- up 2- on the right
+		else
+			if (scoord.charAt(2)=='v')  nc.y=1;
+           	if (scom.contains(qd.strjump) || scom.contains(qd.strmove))
 			nc.y=0;
 		if (nc.y<0) return newmove;
 		int j= (nc.y==0) ? strpawn.indexOf(scoord.charAt(0)) : stredge.indexOf(scoord.charAt(0)); 
