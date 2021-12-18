@@ -2,6 +2,10 @@ import java.awt.Graphics2D;
 
 public abstract class hobject {
     double m_x, m_y, m_r;
+    double senseradius=0;
+    double ominspeed=1;
+    double omaxspeed=3;
+    boolean delobj=false;
 
   	PVector position;// = new PVector();
     
