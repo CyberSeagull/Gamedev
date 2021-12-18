@@ -14,7 +14,7 @@ public class hunter extends hobject {
     // physics:
     double m_alpha;     // rotation
     double m_speed=0;
-    double m_max_velocity = 250;
+    double m_max_velocity = 150;
     double m_min_velocity = -100;
     extentcollision m_collision;
 	boolean keyboardState[] = new boolean[KeyEvent.KEY_LAST];
