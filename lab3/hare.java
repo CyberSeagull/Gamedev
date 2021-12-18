@@ -11,22 +11,29 @@ public class hare extends hobject {
   	double maxspeed;    // Maximum speed  	
   	double r;
     double d;
+    double dcircle;
+    double anglestep=15;
     extentcollision m_collision_box;
-        
+    double circledistance =1;
+    double circleradius=1;
+    int anglechangestep=15;
+    int angle =0;   
     
     public hare(double x, double y, double r, Color mycolor, double alpha) throws Exception {
         m_x = x;
         m_y = y;
         m_r = r;
+        senseradius=100;
+        omaxspeed=4;
         m_color=mycolor;
         acceleration = new PVector(0,0);
         velocity = new PVector(3,-2);
-        velocity.mult(5);;
+       // velocity.mult(5);;
         position = new PVector(x,y);        
 //        r = 6;
-        maxspeed = 5;
-        maxforce = 0.15;      
-        d=39;
+        maxspeed = 4;
+        maxforce = 0.1;      
+        d=75;
         
        // m_collision_box = new extentcollision(m_x, m_y, m_r);
     }
@@ -34,6 +41,26 @@ public class hare extends hobject {
     void applyForce(PVector force) {
       acceleration.add(force);
     }
+    double map(double val, double start1, double stop1, double start2, double stop2) {
+    	if (Math.abs(stop1-start1)>0.0001)
+    	return val*(stop2-start2)/(stop1-start1);
+    	else return val;
+    }
+    
+    void arrive(PVector target) {
+        PVector desired = PVector.sub(target, position);     
+        double d = desired.mag();
+     
+        if (d < 100) {   // Scale with arbitrary damping within 100 pixels
+          double m = map(d,0,100,0,maxspeed);
+          desired.setmag(m);
+        } else 
+        	 desired.setmag(maxspeed);
+    //The usual steering = desired - velocity
+        PVector steer = PVector.sub(desired,velocity);
+        steer.limit(maxforce);
+        applyForce(steer);
+      }
 
     void seek(PVector target) {
         PVector desired = PVector.sub(target,position);  
@@ -46,7 +73,7 @@ public class hare extends hobject {
         applyForce(steer);
       }
             
-    void boundaries(double width, double height, double d) {
+    boolean boundaries(double width, double height, double d) {
     	PVector desired = null;
     	
         if (position.x < d) 
@@ -64,11 +91,50 @@ public class hare extends hobject {
             PVector steer = PVector.sub(desired, velocity);
             steer.limit(maxforce);
             applyForce(steer);
-        }
+          return true;
+        } 
+       else return false;
       }
+    public void getrandomtarget(PVector futurepos) { //Wandering
+      double rnd= Math.random();
+  	  if (rnd<0.5) angle+=anglechangestep;
+  	  else if (rnd<1) angle-=anglechangestep;
+  	  double angleradr = Math.toRadians(angle);
+
+  	  futurepos.x=velocity.x;
+      futurepos.y=velocity.y;
+      futurepos.setmag(circledistance);
+      futurepos.add(position);  	  
+      PVector vector=new PVector( Math.cos(angleradr), Math.sin(angleradr));
+      vector.setmag(circleradius);
+      futurepos.add(vector);
     
     public void update(hlist game, double delta_t) {
-    	boundaries(game.getWidth(), game.getHeight(), d+m_r/2);
+    	hobject hun =  game.getmindistance(this);//game.m_objects.get(0);
+    	PVector target = new PVector(0, 0);
+    	//PVector target = new PVector(22, 22);
+//    	arrive(target);
+        	if (!boundaries(game.getWidth(), game.getHeight(), d+m_r/2))
+    	{ 	
+        		if (hun == null)
+        		{ 
+        			maxspeed=ominspeed;
+             		getrandomtarget(target);
+            		seek(target);
+  //                System.out.println(" angle= "+angle+" rad "+target.x+" rad "+target.y);
+        		}
+        			else
+
+        		{
+        			maxspeed=omaxspeed;
+        			target.x=hun.getX();
+        			target.y=hun.getY();
+            		seek(target);
+                  	acceleration.mult(-1);
+//                  	System.out.println(" hun.x= "+hun.getX()+" hun.y= "+hun.getY()+" rad "+target.x+" rad "+target.y);
+        		}
+        	
+    	}
     	velocity.add(acceleration);
     	velocity.limit(maxspeed);
     	position.add(velocity);
