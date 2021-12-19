@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ public class hlist {
     int r_width;
     int r_height;
     
-    public hlist(double width, double height, int frames_per_second) {
+    public hlist(int width, int height, int frames_per_second) {
         m_width = width;
         m_height = height;
 	r_width = width-2*m_dx;
@@ -21,11 +22,11 @@ public class hlist {
         m_frames_per_second = frames_per_second;
     }
     
-    public double getWidth() {
+    public int getWidth() {
         return m_width;
     }
     
-    public double getHeight() {
+    public int getHeight() {
         return m_height;
     }
 	public int getdx() {
@@ -57,7 +58,7 @@ public class hlist {
     	for(int i=m_objects.size()-1; i>=0; i--)
     	   m_objects.remove(m_objects.get(i));
 
-    	hunter hunter1 = new hunter(125,125 ,28, Color.WHITE,0);
+    	hunter hunter1 = new hunter(28,50 ,28, Color.WHITE,0);
         m_objects.add(hunter1);
 
     	for (int i = 0; i < counthare; i++) 
@@ -75,7 +76,7 @@ public class hlist {
     	}
     }
     public hobject getmindistance(hobject o) {
-    	double d=999;
+    	double d=9999;
     	double d2=0;
     	hobject res=null;
     	for(hobject o2:m_objects) 
