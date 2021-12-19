@@ -2,64 +2,85 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 public class doe extends hobject {
-  	PVector velocity;// = new PVector();
-  	PVector acceleration;// = new PVector();
-  	Color m_color;
-  	double maxforce;    // Maximum steering force
-  	double maxspeed;    // Maximum speed  	
-    extentcollision m_collision_box;
+  	double omediumspeed=2;
+    double minsenseflock=35;
+    double maxsenseflock=120;
         
     
     public doe(double x, double y, double r, Color mycolor, double alpha) throws Exception {
         m_x = x;
         m_y = y;
         m_r = r;
+        senseradius=170;
+        omaxspeed=3.2;  
+        ominspeed=0.7;  
+        omediumspeed=(omaxspeed+ominspeed)/2;
         m_color=mycolor;
         acceleration = new PVector(0,0);
-        velocity = new PVector(0,-2);
+        velocity = new PVector(0,0);
         position = new PVector(x,y);        
-        maxspeed = 5;
+        maxspeed = 3.2;
         maxforce = 0.1;        
-        
-       // m_collision_box = new extentcollision(m_x, m_y, m_r);
+        minsenseflock=m_r*1;
+        maxsenseflock=m_r*2;//senseradius-m_r*3;
+
+        circledistance =1;
+        circleradius=1;
+        anglechangestep=15;
+        angle =0;    
+        d=75;
     }
 
-    void applyForce(PVector force) {
-      acceleration.add(force);
-    }
-    void seek(PVector target) {
-        PVector desired = PVector.sub(target,position);  
-        
-        // Scale to maximum speed
-        desired.setmag(maxspeed);
-
-        // Steering = Desired minus velocity
-        PVector steer = PVector.sub(desired,velocity);
-        steer.limit(maxforce);  // Limit to maximum steering force
-        
-        applyForce(steer);
-      }
+   
             
     
     public void update(hlist game, double delta_t) {
-    	hobject hun = game.m_objects.get(0);
+    	hobject hun = game.getmindistance(this);
     	
-//    	for(hobject go:game.m_objects) 
-//	    System.out.println("------hun_x= "+go.getX()+"  hun_y= "+go.getY()+"  hun_y= "+go.m_x+" "+m_x );    		    
-    	
-    	seek(new PVector(hun.getX(), hun.getY()));
-    		    // Update velocity
-    		    velocity.add(acceleration);
-    		    // Limit speed
-    		    velocity.limit(maxspeed);
-    		    position.add(velocity);
-    		    // Reset accelerationelertion to 0 each cycle
-    		    acceleration.mult(0);
-    		    
-    		    m_x=position.x;
-    		    m_y=position.y;		    
-    //		    System.out.println("------hun_x= "+hun.getX()+"  hun_y= "+hun.getY()+"  hun_y= "+hun.m_x );    		    
+      PVector target = new PVector(0, 0);
+    	if (!boundaries(game.getWidth(), game.getHeight(), d+m_r/2, game.m_dx, game.m_dy ))
+    	{ 	
+    		if (hun == null)
+    		{ 
+    			maxspeed=omediumspeed; //looking for a flock
+         		getrandomtarget(target);
+        		seek(target);
+//                System.out.println(" angle= "+angle+" rad "+target.x+" rad "+target.y);
+    		}else
+    		{   double d2= PVector.sub(this.position, hun.position).mag();	
+    			if ( (hun instanceof wolf) ||(hun instanceof hunter) || (d2<minsenseflock) )
+    			{ //running away
+    				maxspeed=omaxspeed;
+    				if (hun instanceof doe)
+        				maxspeed=omediumspeed;
+        			target.x=hun.getX();
+    			    target.y=hun.getY();
+        		    seek(target);
+              	    acceleration.mult(-1);    			
+    			}else
+        			if (hun instanceof doe) 
+        			{
+        				if (d2<maxsenseflock) 
+                 		  getrandomtarget(target);       	    	
+        				else {
+                			target.x=hun.getX();
+                			target.y=hun.getY();
+                		//	System.out.println("!! m_x= "+m_x+"  m_y= "+m_y+" m_r= "+m_r+" d= "+d2);
+        				}
+            			maxspeed=ominspeed;
+                		seek(target);
+        				
+        			}
+    		}    		    
     }
+    velocity.add(acceleration);
+    	velocity.limit(maxspeed);
+    	position.add(velocity);
+    	acceleration.mult(0);
+    	m_x=position.x;
+    	m_y=position.y;		    
+    }
+    
     // draw circle  
     public void draw(Graphics2D g) {
         Graphics2D gg = (Graphics2D) g.create();
@@ -68,8 +89,6 @@ public class doe extends hobject {
 //    	System.out.println("!! m_x= "+m_x+"  m_y= "+m_y+" m_r= "+m_r+"  ");
         gg.dispose();        
     }
-    public extentcollision getCollisionBox() {
-        return m_collision_box;
-    }
+   
     
 }
