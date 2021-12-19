@@ -9,15 +9,18 @@ public class hunter extends hobject {
     public static final int M_STEERING = 0;
     public static final int M_THROTTLE = 1;
     public static final int M_BRAKE = 2;
+    public static final int M_SHOT  = 3;
 	
+    int countball=77; // shots
+    boolean keyboardState[] = new boolean[KeyEvent.KEY_LAST];
+    boolean drawball = false;
     
     // physics:
     double m_alpha;     // rotation
     double m_speed=0;
     double m_max_velocity = 150;
     double m_min_velocity = -100;
-    extentcollision m_collision;
-	boolean keyboardState[] = new boolean[KeyEvent.KEY_LAST];
+    
   
     public hunter(double x, double y, double r, Color mycolor, double alpha) throws Exception {
         position = new PVector(x,y);        
@@ -29,7 +32,7 @@ public class hunter extends hobject {
         
         
         SetKeyState();
-        m_collision = new extentcollision(m_x, m_y, m_r);
+        
     }
     public static final int key_accelerate = KeyEvent.VK_UP;
     public static final int key_brake = KeyEvent.VK_DOWN;
@@ -62,17 +65,19 @@ public class hunter extends hobject {
     public  void updatek(double keycontrol[]) {
         keycontrol[M_STEERING] = 0;
         keycontrol[M_THROTTLE] = 0;
-        keycontrol[M_BRAKE] = 0;        
+        keycontrol[M_BRAKE] = 0; 
+	keycontrol[M_SHOT]  = 0;
         if (keyboardState[key_left] && !keyboardState[key_right]) keycontrol[M_STEERING] = -1;
         if (keyboardState[key_right] && !keyboardState[key_left]) keycontrol[M_STEERING] = +1;
         if (keyboardState[key_accelerate]) keycontrol[M_THROTTLE] = 1;
         if (keyboardState[key_brake]) keycontrol[M_BRAKE] = 1;
+	if (keyboardState[key_space]) keycontrol[M_SHOT] = 1;
      //   System.out.println("key_left " + keyboardState[key_accelerate]+" j "+ keycontrol[1]);                
     }
       
     
     public void update(hlist game, double delta_t) {
-        double keycontrol[] = {0,0,0};
+        double keycontrol[] = {0,0,0,0};
         updatek(keycontrol);
       //  acceleration = new PVector(0,0);
         // 
@@ -92,32 +97,25 @@ public class hunter extends hobject {
         m_x += Math.cos(m_alpha)*m_speed * delta_t;
         m_y += Math.sin(m_alpha)*m_speed * delta_t;
         double turning_rate = keycontrol[M_STEERING]*m_speed;
-        m_alpha+=turning_rate*delta_t/50;
+        m_alpha+=turning_rate*delta_t/70;
     //    System.out.println("!! m_speed= "+m_speed+"  brake= "+brake_strength+" acceleration= "+acceleration+"  "+Math.sin(m_alpha));     
         
-        // update the collision:
-        m_collision.C.x = m_x;
-        m_collision.C.y = m_y;
-        m_collision.r   = m_r;
-        position.x = m_x;        
+         position.x = m_x;        
         position.y = m_y;        
-
-        
+        drawball=(keycontrol[M_SHOT]==1) && (countball>0);
+        if (drawball) countball--;
         // check for collisions:
-        double xy = extentcollision.GetLengthtotheWalls(game.getWidth(), game.getHeight(), position, m_r);
-        if ( (game.collision(this) != null) || (xy<0)  ) //  
+        double xy = GetLengthtotheWalls(game.getWidth(), game.getHeight(), position, m_r, game.m_dx, game.m_dy );
+        if (  (xy<0)  ) //  
         {
-        	//ic++;	System.out.println("pressed: ----- "+ic );
             m_x = old_x;
             m_y = old_y;
             m_alpha = old_angle;
             m_speed = 0;
 
-            m_collision.C.x = m_x;
-            m_collision.C.y = m_y;
-            m_collision.r   = m_r;
         }
         ;
+
         
     }
     // draw circle  
@@ -129,13 +127,11 @@ public class hunter extends hobject {
         gg.translate(-m_x,-m_y);
         gg.fillOval((int)(m_x-m_r/2), (int)(m_y-m_r/2), (int)m_r, (int)m_r);
         gg.setColor(Color.red);
-        gg.fillRect((int)(m_x), (int)(m_y), (int)(m_r/2), 2);
-    	//System.out.println("!! m_x= "+m_x+"  m_y= "+m_y+" m_alpha= "+m_r+"  "+Math.sin(m_alpha));
+        double lengthshot=drawball ? m_r*2 : m_r/2;
+        gg.fillRect((int)(m_x), (int)(m_y), (int)(lengthshot), 2);
+//        gg.fillRect((int)(m_x), (int)(m_y), (int)(m_r/2), 2);
         gg.dispose();        
     }
     
-    public extentcollision getCollisionBox() {
-        return m_collision;
-    }
     
 }
