@@ -11,7 +11,7 @@ public class hunter extends hobject {
     public static final int M_BRAKE = 2;
     public static final int M_SHOT  = 3;
 	
-    int countball=77; // shots
+    int countball=177; // shots
     boolean keyboardState[] = new boolean[KeyEvent.KEY_LAST];
     boolean drawball = false;
     
@@ -38,6 +38,7 @@ public class hunter extends hobject {
     public static final int key_brake = KeyEvent.VK_DOWN;
     public static final int key_left = KeyEvent.VK_LEFT;
     public static final int key_right = KeyEvent.VK_RIGHT;
+    public static final int key_space = KeyEvent.VK_F1;
     
     public  void  SetKeyState() {
     	for(int i = 0;i<KeyEvent.KEY_LAST;i++) keyboardState[i] = false;
@@ -61,6 +62,28 @@ public class hunter extends hobject {
             });    
     }
 
+  public  double pointlinedistance(double x0, double y0, double x1, double y1, double m_alpha) {
+    	double x2=x1+100*Math.cos(m_alpha);
+    	double y2=y1+100*Math.sin(m_alpha);
+        return ((x1>x2)^(x1>x0)) || ((y1>y2)^(y1>y0)) ? 9999 : 
+        	Math.abs( (y2-y1)*x0-(x2-x1)*y0+x2*y1-y2*x1) / Math.sqrt(Math.pow(y2-y1, 2)+Math.pow(x2-x1, 2) );
+    }
+    public  void huntershots(hlist game) {
+    	double d=9999;
+    	double d2=0;
+    	hobject res=null;
+    	for(hobject o2:game.m_objects) 
+            if (o2!=this)
+            	if(pointlinedistance(o2.position.x, o2.position.y, m_x, m_y, m_alpha) < o2.getRadius()  ) {
+            		d2= PVector.sub(this.position, o2.position).mag();
+            		if (d>d2) {
+            			d=d2; res=o2;//index = m_objects.indexOf(o2);
+            	}
+            }
+    	if (!(res == null)) res.delobj=true;
+    //	if (res instanceof wolf) System.out.println("I'm HUNTER. I kill a WOLF. = "+res.delobj);
+    	
+    }
     
     public  void updatek(double keycontrol[]) {
         keycontrol[M_STEERING] = 0;
@@ -103,7 +126,10 @@ public class hunter extends hobject {
          position.x = m_x;        
         position.y = m_y;        
         drawball=(keycontrol[M_SHOT]==1) && (countball>0);
-        if (drawball) countball--;
+        if (drawball) { 
+        	countball--;
+        	huntershots(game);
+        }
         // check for collisions:
         double xy = GetLengthtotheWalls(game.getWidth(), game.getHeight(), position, m_r, game.m_dx, game.m_dy );
         if (  (xy<0)  ) //  
