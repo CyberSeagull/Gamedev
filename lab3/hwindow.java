@@ -114,7 +114,11 @@ import javax.swing.SpinnerNumberModel;
 //                    synchronized (hlist.class) 
                 {
                 	hlistu.update();
+                	int counto=hlistu.m_objects.size();
                 	lresult.setText("ALL: "+hlistu.m_objects.size());
+                	if (hlistu.m_objects.size()==1)
+                		if (hlistu.m_objects.get(0) instanceof hunter)
+                		lresult.setText("YOU won)");
                     frame.repaint();
                     next_update += interval;
                     if (current_time>=next_update + interval*10) next_update = current_time + interval;
