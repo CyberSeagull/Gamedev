@@ -68,8 +68,7 @@ public abstract class hobject {
           applyForce(steer);
         }
               
-      boolean boundaries(double width, double height, double d, double dx, double dy) {
-      	
+       public  PVector boundaries_(double width, double height, double d, double dx, double dy) {
     	  PVector desired = null;
       	  width=width-dx;
       	  height=height-dy;
@@ -89,11 +88,11 @@ public abstract class hobject {
               desired.mult(maxspeed);
               PVector steer = PVector.sub(desired, velocity);
               steer.limit(maxforce);
-              applyForce(steer);
+              return steer;
+          //    applyForce(steer);
            //   System.out.println("!! m_x= "+m_x+"  m_y= "+m_y+" m_r= "+(width -d)+"  ");
-              return true;
-          } else return false;
-          
+            //  return true;
+          } else return null;// new PVector(0,0);
         }
       
   	public  double GetLengthtotheWalls(double x_w, double y_h, PVector pos, double r, double dx, double dy) {
