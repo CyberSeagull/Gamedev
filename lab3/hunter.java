@@ -18,8 +18,8 @@ public class hunter extends hobject {
     // physics:
     double m_alpha;     // rotation
     double m_speed=0;
-    double m_max_velocity = 150;
-    double m_min_velocity = -100;
+    double m_max_velocity = 90;
+    double m_min_velocity = -60;
     
   
     public hunter(double x, double y, double r, Color mycolor, double alpha) throws Exception {
