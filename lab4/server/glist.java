@@ -5,16 +5,10 @@ public class glist {
     List<gclient> m_clients = new ArrayList<>();
     public boolean stopstart=false;
     int m_width, m_height;    
-    int m_dx=10, m_dy=30;    
     int m_frames_per_second;
-    int r_width;
-    int r_height;
     public glist(int width, int height, int frames_per_second) {
         m_width = width;
         m_height = height;
-        r_width = width-2*m_dx;
-        r_height = height-2*m_dy;
-        
         m_frames_per_second = frames_per_second;
     }
     public int getWidth() {
@@ -24,4 +18,14 @@ public class glist {
     public int getHeight() {
         return m_height;
     }
+    
+    public void setclearobject(int countfood) throws Exception {
+    	for(int i=m_clients.size()-1; i>=0; i--)
+    		m_clients.remove(m_clients.get(i));
+    		    
+//    	for (int i = 0; i < countfood; i++) 
+//    		m_clients.add(new food( rnd(r_width-2*rhare)+m_dx+rhare, rnd(r_height-2*rhare)+m_dy+rhare, rhare, Color.green, 0) );
+    }
+    
+    
 }

@@ -6,14 +6,11 @@ import java.net.SocketException;
 
 public class UDPServer{
   
-  public final static int SERVICE_PORT=277;//50001;
- 
-   public static void main(String[] args) throws IOException{
-	  glist game = new glist(800,600, 25);
+  public static void main(String[] args) throws IOException{
+	  glist game = new glist(500,100, 25);
 	  gwindowUDPserver.newWindow(game);		
-    	
+
 
   }
-
   
 }
