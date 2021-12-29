@@ -7,7 +7,6 @@ public class glist {
     int m_width, m_height;    
     int m_dx=10, m_dy=30;    
     int m_frames_per_second;
-    int countsectimeoflife=77;
     int r_width;
     int r_height;
     public glist(int width, int height, int frames_per_second) {
@@ -18,5 +17,11 @@ public class glist {
         
         m_frames_per_second = frames_per_second;
     }
-
+    public int getWidth() {
+        return m_width;
+    }
+    
+    public int getHeight() {
+        return m_height;
+    }
 }
