@@ -41,15 +41,16 @@ class UDPreceivedata extends Thread
 						   String  sip = serverSocket.rp.getAddress().toString();
 						  
 						   for(gclient go: m_glist.m_clients)  
-							   if (go.sip.compareTo(sip)==0) {
-				        		cl=go; break;
+							  if (go instanceof gclient)
+								   if ( ((gclient)go).sip.compareTo(sip)==0) {
+									   cl=(gclient) go; break;
 				        	}
 						   if (cl==null) {
 							   cl = new gclient(serverSocket.rp.getAddress(), m_glist.m_width, m_glist.m_height, serverSocket.rp.getPort());
 							   m_glist.m_clients.add(cl);
 						   }
 						   cl.setData(serverSocket.rp.getData(), serverSocket.rp.getLength());
-						   
+						   cl.last_update = System.currentTimeMillis();
 						   m_glist.getdataforplayer(cl); 
 						   serverSocket.send(cl.sp);
 						   
