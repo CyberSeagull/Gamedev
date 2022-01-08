@@ -1,19 +1,21 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.List;
 
 public class dtgserver  extends DatagramSocket{
-
-		byte[] rData = new byte[1024];
+    byte[] rData = new byte[4096];
     DatagramPacket rp = new DatagramPacket(rData, rData.length);
+    byte[] sData = new byte[4096];
+    DatagramPacket sp = new DatagramPacket(sData, sData.length);
 
-	public dtgserver(int port) throws SocketException {
-		super(port);
+	public dtgserver(int iport) throws SocketException {
+		super(iport);
         this.setSoTimeout(10000);
-
+        sp.setPort(iport);
 	}
-	
 }
+
 class UDPreceivedata extends Thread
 {
     private dtgserver serverSocket;
@@ -26,7 +28,6 @@ class UDPreceivedata extends Thread
     @Override
     public void run() {
          { 
-        	 //System.out.println("Start UDPreceivedata from the client: ");
              while(true) {
             	 try {
                      sleep(1);
@@ -34,28 +35,36 @@ class UDPreceivedata extends Thread
                          sleep(100);
                      	continue;
                      }
-					  //System.out.println("Waiting for a client to connect...");
 					  try {    	  
 						   serverSocket.receive(serverSocket.rp);
 						   gclient cl=null;
+	
 						   String  sip = serverSocket.rp.getAddress().toString();
+ 						  // System.out.println("receive: IP= "+sip+"  Length= "+serverSocket.rp.getLength())  ;
 						  
-						   for(gclient go: m_glist.m_clients)  
-							  if (go instanceof gclient)
+						   for(gobject go: m_glist.m_clients)  
+							   if (go instanceof gclient)
 								   if ( ((gclient)go).sip.compareTo(sip)==0) {
-									   cl=(gclient) go; break;
+									   cl=(gclient) go; 
+									   break;
 				        	}
-						   if (cl==null) {
-							   cl = new gclient(serverSocket.rp.getAddress(), m_glist.m_width, m_glist.m_height, serverSocket.rp.getPort());
+						   if (cl==null) { //System.out.println("cl is null")  ;
+							   cl = new gclient(serverSocket.rp.getAddress(), m_glist);
 							   m_glist.m_clients.add(cl);
 						   }
-						   cl.setData(serverSocket.rp.getData(), serverSocket.rp.getLength());
+						   
+						   m_glist.iobuff.receiveclient(serverSocket.rData, cl, serverSocket.rp.getLength());
 						   cl.last_update = System.currentTimeMillis();
-						   m_glist.getdataforplayer(cl); 
-						   serverSocket.send(cl.sp);
+
+						   int lengthdata=m_glist.iobuff.sendclient(serverSocket.sData, m_glist, cl); 
+						   serverSocket.sp.setLength(lengthdata);
+						   serverSocket.sp.setAddress(cl.senderAddress);
+						   serverSocket.sp.setAddress(cl.senderAddress);
+
+						   serverSocket.send(serverSocket.sp);
 						   
 	                    } catch (Exception ex) {
-	                       // System.out.println("Socket error: " + ex.getMessage());
+	                        System.out.println("Socket error: " + ex.getMessage());
 	                    } 
 						   
                  }catch(Exception e) {
@@ -64,4 +73,4 @@ class UDPreceivedata extends Thread
              }
         }
     }
-}   
+    }   
