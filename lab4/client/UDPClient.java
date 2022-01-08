@@ -11,7 +11,7 @@ public class UDPClient{
   public final static int SERVICE_PORT = 277;
   
   public static void main(String[] args) throws IOException{
-    glist game = new glist(900, 600, 25);
+    glist game = new glist(500, 500, 25);
 		  gwindowUDPclient.newWindow(game);
   }
 }
